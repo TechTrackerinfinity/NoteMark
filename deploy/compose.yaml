@@ -1,0 +1,54 @@
+name: mira-notes
+services:
+  sync:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 47821
+      DATA_DIR: /data
+      ALLOW_VAULT_CREATION: ${ALLOW_VAULT_CREATION:-true}
+      TRUST_PROXY: "true"
+      MAX_VAULTS: ${MAX_VAULTS:-100}
+      MAX_TOTAL_BYTES: ${MAX_TOTAL_BYTES:-536870912}
+    expose:
+      - "47821"
+    volumes:
+      - notes-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 1g
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      sync:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in deploy/.env}
+      CADDY_EMAIL: ${CADDY_EMAIL:?Set CADDY_EMAIL in deploy/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  notes-data:
+    name: mira-notes-data
+  caddy-data:
+    name: mira-notes-caddy-data
+  caddy-config:
+    name: mira-notes-caddy-config

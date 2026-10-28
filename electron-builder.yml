@@ -1,0 +1,23 @@
+appId: com.miranotes.desktop
+productName: NoteMark
+asar: false
+directories:
+  output: releases/installer
+win:
+  icon: web/icon.ico
+  target:
+    - target: nsis
+      arch: x64
+  artifactName: NoteMark-Setup-${version}.exe
+  signExecutable: false
+nsis:
+  oneClick: false
+  perMachine: true
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: NoteMark
+  include: desktop/installer.nsh
+  runAfterFinish: true

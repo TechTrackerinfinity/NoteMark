@@ -1,0 +1,13 @@
+node_modules
+.build
+releases
+android
+android-tests/build
+android-tests/.gradle
+analysis
+sync-data
+data
+dist
+deploy/.env
+.git
+*.log

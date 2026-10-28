@@ -1,0 +1,20 @@
+{
+    email {$CADDY_EMAIL}
+    admin off
+}
+
+{$DOMAIN} {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+    @api path /api/*
+    handle @api {
+        request_body {
+            max_size 2MB
+        }
+        reverse_proxy sync:47821
+    }
+    respond "NoteMark encrypted sync server" 200
+}

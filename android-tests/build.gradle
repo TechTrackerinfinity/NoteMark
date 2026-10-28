@@ -1,0 +1,52 @@
+import org.gradle.api.artifacts.transform.*
+import org.gradle.api.attributes.Attribute
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
+import java.util.zip.ZipFile
+
+plugins { id 'java' }
+
+repositories { google(); mavenCentral() }
+
+abstract class AarClasses implements TransformAction<TransformParameters.None> {
+    @InputArtifact abstract Provider<FileSystemLocation> getInputArtifact()
+    @Override void transform(TransformOutputs outputs) {
+        def aar = new ZipFile(inputArtifact.get().asFile)
+        try {
+            def classes = aar.getEntry('classes.jar')
+            if (classes != null) {
+                def output = outputs.file('classes.jar')
+                aar.getInputStream(classes).withCloseable { stream -> output.withOutputStream { it << stream } }
+            }
+        } finally { aar.close() }
+    }
+}
+def artifactType = Attribute.of('artifactType', String)
+dependencies {
+    registerTransform(AarClasses) { from.attribute(artifactType, 'aar'); to.attribute(artifactType, 'jar') }
+    compileOnly files(System.getenv('MIRA_ANDROID_JAR') ?: 'D:/Android/platforms/android-36/android.jar')
+    testImplementation files(System.getenv('MIRA_ANDROID_JAR') ?: 'D:/Android/platforms/android-36/android.jar')
+    testImplementation 'org.robolectric:robolectric:4.17'
+    testImplementation 'junit:junit:4.13.2'
+}
+configurations.testRuntimeClasspath.attributes.attribute(artifactType, 'jar')
+configurations.testCompileClasspath.attributes.attribute(artifactType, 'jar')
+sourceSets.main.java.srcDirs = ['../android/src']
+java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+// Match the release Java 8 class format; tests themselves can use JDK 17 helpers.
+tasks.named('compileJava', JavaCompile) {
+    sourceCompatibility = '1.8'; targetCompatibility = '1.8'
+    options.bootstrapClasspath = files(System.getenv('MIRA_ANDROID_JAR') ?: 'D:/Android/platforms/android-36/android.jar', 'D:/Android/build-tools/36.0.0/core-lambda-stubs.jar')
+}
+test {
+    useJUnit()
+    // These tests launch the shared JS client and read the freshly built APK.
+    // Java-only cache inputs would otherwise reuse results after app changes.
+    inputs.dir('../web')
+    inputs.file('../test/phone-host-client.mjs')
+    inputs.file('../releases/NoteMark-Android.apk')
+    maxHeapSize = '2g'
+    systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+    testLogging { events 'passed', 'failed', 'skipped'; exceptionFormat 'full'; showStandardStreams = true }
+}

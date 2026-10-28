@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f6f8fc">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https: http:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>NoteMark</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <aside class="sidebar" aria-label="Notebook navigation">
+    <a class="brand" href="#"><img src="icon.svg" alt=""><span>NoteMark</span></a>
+    <div class="notebook-label">WORKSPACE</div>
+    <nav id="navigation">
+      <button class="nav active" data-filter="all"><span data-icon="notes"></span>All notes<span id="all-count" class="count">0</span></button>
+      <button class="nav" data-filter="pinned"><span data-icon="pin"></span>Pinned</button>
+      <button class="nav" data-filter="tasks"><span data-icon="tasks"></span>Checklists</button>
+      <button class="nav" data-filter="trash"><span data-icon="trash"></span>Trash<span id="trash-count" class="count">0</span></button>
+    </nav>
+    <div class="folder-heading"><span>FOLDERS</span><button id="new-folder" class="icon-button" aria-label="Create folder"><span data-icon="plus"></span></button></div>
+    <div id="folders" class="folders"></div>
+    <div class="sidebar-bottom"><div class="sync-card"><span class="device-art" data-icon="devices"></span><strong>Your notes. Everywhere.</strong><p>One notebook for your phone<br>and your desktop.</p><button id="connect-sidebar">Connect devices <span data-icon="arrow"></span></button></div><button id="settings" class="settings"><span data-icon="settings"></span>Settings & sync</button><div class="local-caption">A clear space for what matters.</div></div>
+  </aside>
+  <main>
+    <header class="topbar"><button class="mobile-brand" id="mobile-home" aria-label="Show all notes"><img src="icon.svg" alt="">NoteMark</button><span class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-title">All notes</strong></span><button id="sync-status" class="sync-status"><span class="status-dot"></span><span id="sync-label">Saved on this device</span></button><button id="mobile-settings" class="icon-button" aria-label="Settings and sync"><span data-icon="settings"></span></button></header>
+    <section class="workspace">
+      <div class="page-heading"><div><div class="eyebrow" id="today"></div><h1 id="page-title">All notes</h1><p id="page-subtitle">Make room for your next idea.</p></div><button class="primary" id="new-note"><span data-icon="plus"></span>New note</button></div>
+      <div class="toolbar"><label class="search"><span data-icon="search"></span><input id="search" placeholder="Search notes, lists, and folders…" aria-label="Search notes"><kbd>Ctrl K</kbd></label><select id="sort" aria-label="Sort notes"><option value="oldest">Oldest first</option><option value="updated">Last edited</option><option value="created">Newest first</option><option value="title">Title A–Z</option></select><button id="select-mode" class="secondary"><span data-icon="select"></span><span id="select-mode-label">Select</span></button><button id="layout-toggle" class="icon-button view-button" aria-label="Switch to list view"><span data-icon="list"></span></button></div>
+      <div id="mobile-filters" class="mobile-filters"><button data-filter="all" class="active">All notes</button><button data-filter="pinned">Pinned</button><button data-filter="tasks">Checklists</button><button data-filter="trash">Trash</button></div>
+      <div id="selection-bar" class="selection-bar" hidden><label><input id="select-all" type="checkbox"><span>Select all visible</span></label><strong id="selected-count">0 selected</strong><div class="selection-actions"><button id="selection-restore" class="secondary" hidden><span data-icon="restore"></span>Restore</button><button id="selection-trash" class="danger-button"><span data-icon="trash"></span>Move to Trash</button><button id="selection-delete" class="danger-button" hidden><span data-icon="delete"></span>Delete permanently</button></div></div>
+      <div class="section-label"><span id="section-label">YOUR NOTES</span><span id="results-count"></span></div><div id="notes-grid" class="notes-grid" aria-live="polite"></div>
+      <div id="empty-state" class="empty-state"><div class="empty-illustration"><span data-icon="notes"></span></div><h2>A fresh page awaits.</h2><p>Capture an idea, make a list, or plan your next move.</p><button id="empty-create" class="primary"><span data-icon="plus"></span>Write your first note</button></div>
+      <footer class="workspace-footer"><span id="footer-count">0 notes</span><span>Space to think. Room to grow.</span></footer>
+    </section>
+  </main>
+  <dialog id="editor" class="editor-dialog">
+    <div class="editor-top"><button id="close-editor" class="icon-button" aria-label="Save and close note"><span data-icon="back"></span></button><span id="editor-status">Saved on this device</span><div class="editor-actions"><span id="trash-preview-label" hidden>Trash preview</span><button id="pin-note" class="icon-button" aria-label="Pin note"><span data-icon="pin"></span></button></div></div>
+    <div class="editor-meta"><select id="note-type" aria-label="Note type"><option value="note">Note</option><option value="task">Checklist</option></select><input id="note-folder" placeholder="Add a folder" aria-label="Note folder" list="folder-options" maxlength="60"><datalist id="folder-options"></datalist><div id="color-picker" class="color-picker" aria-label="Note colors"></div></div>
+    <textarea id="note-title" class="note-title" rows="1" wrap="soft" placeholder="Untitled note" aria-label="Note title" maxlength="500"></textarea><textarea id="note-body" wrap="soft" placeholder="Start writing. Your notes save as you go." aria-label="Note text" maxlength="350000"></textarea>
+    <div id="task-tools" class="task-tools" hidden><span><span id="task-order-info">Oldest first · newest at bottom</span><span id="task-drag-help">Drag the dotted handle to reorder</span></span><div><button id="reorder-tasks" class="secondary" aria-pressed="false" title="Show or hide when each item was added"><span data-icon="reorder"></span>Show times</button><button id="reset-task-order" class="text-button" title="Restore addition-time order">By time</button></div></div>
+    <span id="task-drag-status" class="visually-hidden" role="status" aria-live="polite"></span>
+    <div id="checklist" class="checklist"></div>
+    <form id="add-task-form" class="add-task-form"><span data-icon="plus"></span><textarea id="new-task" rows="1" wrap="soft" placeholder="Add a list item…" aria-label="New checklist item" maxlength="2000" enterkeyhint="done" title="Saves as you type. Enter adds the item; Shift+Enter adds a new line."></textarea><button type="submit">Add item</button></form>
+    <section id="completed-section" class="completed-section" hidden><h3>Completed · <span id="completed-count"></span></h3><div id="completed-checklist" class="checklist"></div></section>
+    <div class="editor-footer"><span id="note-date"></span><span id="word-count"></span></div>
+  </dialog>
+  <dialog id="settings-dialog" class="settings-dialog">
+    <div class="dialog-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h2>Settings & sync</h2></div><button class="icon-button" data-close="settings-dialog" aria-label="Close settings"><span data-icon="close"></span></button></div><p class="dialog-intro">Keep your notes connected. Back up what matters.</p>
+    <div id="connection-summary" class="connection-summary"></div>
+    <div id="phone-host" class="phone-host" hidden><strong>Let Windows connect to this phone</strong><p class="help">Use this when the phone cannot reach the PC. Keep NoteMark open on both devices on the same Wi-Fi.</p><p id="phone-host-status" class="help"></p><button id="start-phone-host" class="primary full">Host from this phone</button><button id="stop-phone-host" class="secondary" hidden>Stop phone hosting</button></div>
+    <div id="windows-wifi" class="windows-wifi" hidden><strong id="wifi-status"></strong><p id="wifi-help" class="help"></p><button id="repair-wifi" class="secondary">Repair Wi-Fi access</button></div>
+    <div class="settings-tabs"><button id="tab-create" class="active">Set up sync</button><button id="tab-join">Connect a device</button></div>
+    <div id="create-panel"><label class="field-label" for="server-url">Sync server address</label><input id="server-url" class="text-field" placeholder="https://notes.your-domain.com" autocomplete="url"><p class="help">Use a hosted HTTPS server for internet sync, or host from Windows or Android on the same Wi-Fi. On the other device, paste the host’s connection code.</p><div id="lan-options" class="lan-options"></div><button id="create-sync" class="primary full">Create synced notebook <span data-icon="arrow"></span></button></div>
+    <div id="join-panel" hidden><label class="field-label" for="pairing-input">Connection code from your other device</label><textarea id="pairing-input" class="text-field pairing" placeholder="mira1.…" spellcheck="false"></textarea><p class="help">On the hosting device, choose “Show connection code”. Your existing notes will be added to that notebook.</p><button id="join-sync" class="primary full">Connect this device <span data-icon="arrow"></span></button></div>
+    <div id="pairing-panel" class="pairing-panel" hidden><strong>Connect your other device</strong><p class="help">Keep this code private. It contains your notebook’s credentials and encryption key.</p><textarea id="pairing-output" class="text-field pairing" readonly aria-label="Private device connection code"></textarea><button id="copy-pairing" class="secondary">Copy connection code</button></div>
+    <div class="connection-tools"><button id="test-connection" class="secondary">Test connection</button><a id="open-connection-test" target="_blank" rel="noopener" hidden>Open server check in browser</a></div><p id="settings-message" class="settings-message" role="status"></p>
+    <section class="backup-section"><div><span class="backup-icon" data-icon="download"></span><h3>A backup for peace of mind.</h3><p>Download a ZIP with a Markdown file for each note and restore data. Includes Trash. Backups contain readable notes.</p></div><div class="backup-buttons"><button id="export-notes" class="primary"><span data-icon="download"></span>Download ZIP backup</button><button id="import-notes" class="secondary"><span data-icon="upload"></span>Restore backup</button><button id="export-recovery" class="text-button" hidden>Export recovery JSON</button><input type="file" id="import-file" accept=".zip,.json,application/zip,application/json" hidden></div></section>
+    <p class="fine-print">NoteMark 1.1.9 · Sync runs while the app is open. Server notes are encrypted. Notes saved on this device and exported backups are readable locally.</p>
+  </dialog>
+  <dialog id="folder-dialog" class="small-dialog"><form id="folder-form"><div class="dialog-heading"><h2>New folder</h2><button type="button" class="icon-button" data-close="folder-dialog" aria-label="Close"><span data-icon="close"></span></button></div><label for="folder-name" class="field-label">Folder name</label><input id="folder-name" class="text-field" placeholder="Work, personal, ideas…" maxlength="60" required><button class="primary full">Create folder</button></form></dialog>
+  <dialog id="delete-dialog" class="small-dialog"><div class="delete-illustration" data-icon="delete"></div><h2>Delete permanently?</h2><p id="delete-message"></p><p class="help">This cannot be undone. Paired devices will remove these notes when they sync. Existing downloaded backups are unchanged.</p><div class="confirm-actions"><button id="cancel-delete" class="secondary">Cancel</button><button id="confirm-delete" class="danger-button solid">Delete permanently</button></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
